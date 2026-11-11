@@ -547,55 +547,26 @@ p {
   font-weight: 700;
 }
 
-.shot {
-  margin-top: 0.75rem;
-  border: 1px dashed color-mix(in srgb, var(--moss) 40%, var(--line));
-  border-radius: 12px;
-  padding: 1rem;
-  background:
-    linear-gradient(135deg, rgba(31, 92, 69, 0.06), transparent 40%),
-    #f7faf8;
-  color: var(--ink-soft);
-  font-size: 0.88rem;
-}
-
-.shot-gallery {
-  display: grid;
-  gap: 1rem;
-}
-
-.shot-card {
+.step-shot {
   margin: 0;
+  max-width: 28rem;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   background: #fff;
 }
 
-.shot-card img {
+.step-shot img {
   display: block;
   width: 100%;
   height: auto;
   background: var(--paper-2);
 }
 
-.shot-card figcaption {
-  padding: 0.75rem 1rem 1rem;
-  font-size: 0.88rem;
+.step-shot figcaption {
+  padding: 0.55rem 0.75rem 0.75rem;
+  font-size: 0.82rem;
   color: var(--ink-soft);
-}
-
-.shot-badge {
-  display: inline-block;
-  margin: 0.75rem 1rem 0;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  background: color-mix(in srgb, var(--glow) 55%, white);
-  color: var(--moss-deep);
 }
 
 details.other-guides {

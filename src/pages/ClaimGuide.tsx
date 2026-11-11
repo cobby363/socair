@@ -2,7 +2,6 @@ import { Link, useParams } from "react-router-dom";
 import { PageTransition } from "../components/PageTransition";
 import { useAppState } from "../context/AppState";
 import { CLAIM_GUIDES } from "../data/claimGuides";
-import { shotsForRelief } from "../data/guideMedia";
 import { RELIEF_BY_ID, RELIEFS } from "../data/reliefs";
 import { reliefAvailableInYear } from "../data/yearAvailability";
 import { claimModeForYear } from "../lib/estimate";
@@ -27,7 +26,6 @@ export function ClaimGuide() {
       ? guide.stepsInYear
       : guide.stepsPrior
     : [];
-  const shots = shotsForRelief(focusId);
 
   const available = RELIEFS.filter((r) =>
     reliefAvailableInYear(r.id, state.taxYear),
@@ -110,32 +108,6 @@ export function ClaimGuide() {
               </div>
             )}
 
-            {shots.length > 0 && (
-              <div className="stack">
-                <h2 style={{ fontSize: "1.15rem" }}>Screens you’ll see</h2>
-                <p className="small muted">
-                  Primary images are from Revenue’s published manuals (sample UI).
-                  Secondary images are redacted real myAccount captures. Official
-                  rules always win —{" "}
-                  <a href="https://www.revenue.ie" target="_blank" rel="noreferrer">
-                    revenue.ie
-                  </a>
-                  .
-                </p>
-                <div className="shot-gallery">
-                  {shots.map((s) => (
-                    <figure key={s.src} className="shot-card">
-                      <div className="shot-badge">
-                        {s.source === "official" ? "Official sample" : "Secondary"}
-                      </div>
-                      <img src={s.src} alt={s.caption} loading="lazy" />
-                      <figcaption>{s.caption}</figcaption>
-                    </figure>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="stack">
               <h2 style={{ fontSize: "1.15rem" }}>
                 Steps ({mode === "inYear" ? "current year" : "prior year"})
@@ -150,17 +122,22 @@ export function ClaimGuide() {
                   const done = !!state.stepTicks[key];
                   return (
                     <li key={key} className={done ? "step-done" : undefined}>
-                      <div className="stack" style={{ gap: "0.35rem" }}>
+                      <div className="stack" style={{ gap: "0.5rem" }}>
                         <div>
                           <strong>{step.title}</strong>
                           <p className="small muted" style={{ marginTop: "0.25rem" }}>
                             {step.detail}
                           </p>
                         </div>
-                        {step.screenshotHint && (
-                          <div className="shot">
-                            More screenshots welcome: {step.screenshotHint}
-                          </div>
+                        {step.image && (
+                          <figure className="step-shot">
+                            <img
+                              src={step.image.src}
+                              alt={step.image.caption}
+                              loading="lazy"
+                            />
+                            <figcaption>{step.image.caption}</figcaption>
+                          </figure>
                         )}
                       </div>
                       <button

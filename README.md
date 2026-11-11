@@ -1,4 +1,4 @@
-# Clare — Irish PAYE relief helper
+# Socair — Irish PAYE relief helper
 
 Local-first web app: plain-English checklist, claim guides, and indicative tax-back estimates for Irish PAYE workers.
 

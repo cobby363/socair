@@ -29,9 +29,11 @@ export function ClaimGuide() {
     : [];
   const shots = shotsForRelief(focusId);
 
-  const others = RELIEFS.filter(
-    (r) => r.id !== focusId && reliefAvailableInYear(r.id, state.taxYear),
-  );
+  const available = RELIEFS.filter((r) =>
+    reliefAvailableInYear(r.id, state.taxYear),
+  ).sort((a, b) => a.claimOrder - b.claimOrder);
+  const others = available.filter((r) => r.id !== focusId);
+  const browseOnly = !reliefId && orderedSelected.length === 0;
 
   return (
     <PageTransition>
@@ -42,10 +44,30 @@ export function ClaimGuide() {
             {mode === "inYear" ? "in-year path" : "prior-year path"}
           </div>
           <h1 style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)" }}>
-            {guide?.title ?? focus?.title ?? "How to claim"}
+            {browseOnly
+              ? "Claim guides"
+              : (guide?.title ?? focus?.title ?? "How to claim")}
           </h1>
-          {guide && <p className="lede">{guide.overview}</p>}
+          {browseOnly ? (
+            <p className="lede">
+              Step-by-step myAccount paths for common PAYE reliefs — no checklist
+              needed. Pick a guide below.
+            </p>
+          ) : (
+            guide && <p className="lede">{guide.overview}</p>
+          )}
         </div>
+
+        {browseOnly && (
+          <div className="card-list">
+            {available.map((r) => (
+              <Link key={r.id} to={`/claim/${r.id}`} className="relief-card">
+                <h3>{r.title}</h3>
+                <p className="small muted">{r.oneLiner}</p>
+              </Link>
+            ))}
+          </div>
+        )}
 
         {orderedSelected.length > 0 && (
           <div className="row" style={{ flexWrap: "wrap" }}>
@@ -61,7 +83,7 @@ export function ClaimGuide() {
           </div>
         )}
 
-        {guide && (
+        {guide && !browseOnly && (
           <>
             <div className="stack">
               <h2 style={{ fontSize: "1.15rem" }}>Who this is for</h2>
@@ -164,25 +186,38 @@ export function ClaimGuide() {
           </>
         )}
 
-        <details className="other-guides">
-          <summary>Other claim guides</summary>
-          <div className="card-list" style={{ marginTop: "0.75rem" }}>
-            {others.map((r) => (
-              <Link key={r.id} to={`/claim/${r.id}`} className="relief-card">
-                <h3>{r.title}</h3>
-                <p className="small muted">{r.oneLiner}</p>
-              </Link>
-            ))}
-          </div>
-        </details>
+        {!browseOnly && others.length > 0 && (
+          <details className="other-guides">
+            <summary>Other claim guides</summary>
+            <div className="card-list" style={{ marginTop: "0.75rem" }}>
+              {others.map((r) => (
+                <Link key={r.id} to={`/claim/${r.id}`} className="relief-card">
+                  <h3>{r.title}</h3>
+                  <p className="small muted">{r.oneLiner}</p>
+                </Link>
+              ))}
+            </div>
+          </details>
+        )}
 
         <div className="row" style={{ flexWrap: "wrap" }}>
-          <Link className="btn btn-secondary" to="/results">
-            Back to results
-          </Link>
+          {browseOnly ? (
+            <Link className="btn btn-ghost" to="/">
+              Home
+            </Link>
+          ) : (
+            <Link className="btn btn-secondary" to="/results">
+              Back to results
+            </Link>
+          )}
           <Link className="btn btn-primary" to="/estimate">
             Estimate tax back
           </Link>
+          {!browseOnly && (
+            <Link className="btn btn-ghost" to="/claim">
+              All guides
+            </Link>
+          )}
         </div>
       </section>
     </PageTransition>

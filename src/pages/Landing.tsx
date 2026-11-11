@@ -40,11 +40,14 @@ export function Landing() {
 
         <Disclaimer />
 
-        <div className="row">
+        <div className="row" style={{ flexWrap: "wrap" }}>
           <Link className="btn btn-primary" to={continueTo}>
             {state.checklistComplete ? "Back to your results" : "Start free checklist"}
           </Link>
-          <Link className="btn btn-secondary" to="/privacy">
+          <Link className="btn btn-secondary" to="/claim">
+            Browse claim guides
+          </Link>
+          <Link className="btn btn-ghost" to="/privacy">
             How privacy works
           </Link>
         </div>

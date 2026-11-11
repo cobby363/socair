@@ -4,11 +4,11 @@ import { useAppState } from "../context/AppState";
 import type { TaxYear } from "../lib/types";
 
 const YEARS: { year: TaxYear; blurb: string }[] = [
-  { year: 2025, blurb: "Most common — review last closed year" },
+  { year: 2026, blurb: "Current year — real-time credits path (default)" },
+  { year: 2025, blurb: "Last closed year — common for reviews" },
   { year: 2024, blurb: "Still within the 4-year window" },
   { year: 2023, blurb: "Prior year claim" },
   { year: 2022, blurb: "Last year still claimable in many cases" },
-  { year: 2026, blurb: "Current year — real-time credits path" },
 ];
 
 export function TaxYearPage() {

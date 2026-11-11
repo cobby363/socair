@@ -6,7 +6,7 @@ const LEGACY_KEY = "clare.tax.helper.v1";
 const LEGACY_AMOUNTS_KEY = "clare.tax.helper.amounts.v1";
 
 const defaultState = (): AppPersistedState => ({
-  taxYear: 2025,
+  taxYear: 2026,
   answers: {},
   selectedReliefIds: [],
   stepTicks: {},

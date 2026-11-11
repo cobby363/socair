@@ -10,6 +10,7 @@ import {
   ESTIMATE_FIELD_HELP,
   type EstimateFieldId,
 } from "../data/estimateFieldHelp";
+import { reliefAvailableInYear } from "../data/yearAvailability";
 import { formatEuro, runEstimate } from "../lib/estimate";
 
 function FieldWithHelp({
@@ -45,12 +46,18 @@ function FieldWithHelp({
 export function Estimate() {
   const { state, amounts, setAmounts } = useAppState();
   const navigate = useNavigate();
-  const selected = state.selectedReliefIds;
+  const selected = useMemo(
+    () =>
+      state.selectedReliefIds.filter((id) =>
+        reliefAvailableInYear(id, state.taxYear),
+      ),
+    [state.selectedReliefIds, state.taxYear],
+  );
   const [openField, setOpenField] = useState<EstimateFieldId | null>(null);
 
   const result = useMemo(
-    () => runEstimate(selected, state.answers, amounts),
-    [selected, state.answers, amounts],
+    () => runEstimate(selected, state.answers, amounts, state.taxYear),
+    [selected, state.answers, amounts, state.taxYear],
   );
 
   const onSubmit = (e: FormEvent) => {

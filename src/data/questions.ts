@@ -1,4 +1,11 @@
-import type { ChecklistAnswers, PersonalStatus, ReliefId, TriState } from "../lib/types";
+import type {
+  ChecklistAnswers,
+  PersonalStatus,
+  ReliefId,
+  TaxYear,
+  TriState,
+} from "../lib/types";
+import { QUESTION_RELIEF, reliefAvailableInYear } from "./yearAvailability";
 
 export type QuestionOption = {
   value: string;
@@ -177,7 +184,7 @@ export const QUESTIONS: QuestionDef[] = [
       ],
       where:
         "Keep utility bills for the calendar year. Claim via Income Tax Return / remote working expenses in myAccount. Revenue publishes the exact formula under jobs and pensions → e-working.",
-      tip: "Hybrid workers (e.g. 2 days in office, 3 at home) usually answer Yes.",
+      tip: "Hybrid workers (e.g. 2 days in office, 3 at home) usually answer Yes. The current statutory formula applies from tax year 2022 onwards.",
     },
     type: "choice",
     options: yesNoUnsure,
@@ -418,11 +425,22 @@ export const QUESTIONS: QuestionDef[] = [
   },
 ];
 
-export function visibleQuestions(answers: ChecklistAnswers): QuestionDef[] {
-  return QUESTIONS.filter((q) => (q.showIf ? q.showIf(answers) : true));
+export function visibleQuestions(
+  answers: ChecklistAnswers,
+  taxYear: TaxYear,
+): QuestionDef[] {
+  return QUESTIONS.filter((q) => {
+    if (q.showIf && !q.showIf(answers)) return false;
+    const reliefId = QUESTION_RELIEF[q.id];
+    if (reliefId && !reliefAvailableInYear(reliefId, taxYear)) return false;
+    return true;
+  });
 }
 
-export function deriveSelectedReliefs(answers: ChecklistAnswers): ReliefId[] {
+export function deriveSelectedReliefs(
+  answers: ChecklistAnswers,
+  taxYear: TaxYear,
+): ReliefId[] {
   const ids = new Set<ReliefId>();
 
   if (answers.q_medical === "yes" || answers.q_dental_nonroutine === "yes") {
@@ -448,7 +466,7 @@ export function deriveSelectedReliefs(answers: ChecklistAnswers): ReliefId[] {
   if (answers.q_incap_child === "yes") ids.add("incapacitated_child_credit");
   if (answers.q_dep_relative === "yes") ids.add("dependent_relative_credit");
 
-  return [...ids];
+  return [...ids].filter((id) => reliefAvailableInYear(id, taxYear));
 }
 
 export function isTri(v: unknown): v is TriState {

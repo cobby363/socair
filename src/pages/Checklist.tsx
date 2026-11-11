@@ -9,7 +9,10 @@ import type { ChecklistAnswers } from "../lib/types";
 export function Checklist() {
   const { state, setAnswer, completeChecklist } = useAppState();
   const navigate = useNavigate();
-  const questions = useMemo(() => visibleQuestions(state.answers), [state.answers]);
+  const questions = useMemo(
+    () => visibleQuestions(state.answers, state.taxYear),
+    [state.answers, state.taxYear],
+  );
   const [index, setIndex] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
 

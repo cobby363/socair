@@ -131,3 +131,15 @@ describe("claimModeForYear", () => {
     expect(claimModeForYear(2022)).toBe("priorYear");
   });
 });
+
+describe("remote working year gate", () => {
+  it("still calculates remote working for TY 2022+ (statutory formula years)", () => {
+    const result = runEstimate(
+      ["remote_working"],
+      single,
+      { grossPay: 40_000, utilityBillsYear: 2400, remoteDays: 100, employerWfhPay: 0 },
+      2022,
+    );
+    expect(result.lines.some((l) => l.id === "remote_working")).toBe(true);
+  });
+});

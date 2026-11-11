@@ -1,7 +1,10 @@
 import { Link, useParams } from "react-router-dom";
 import { PageTransition } from "../components/PageTransition";
 import { useAppState } from "../context/AppState";
-import { CLAIM_STEPS, RELIEF_BY_ID, RELIEFS } from "../data/reliefs";
+import { CLAIM_GUIDES } from "../data/claimGuides";
+import { shotsForRelief } from "../data/guideMedia";
+import { RELIEF_BY_ID, RELIEFS } from "../data/reliefs";
+import { reliefAvailableInYear } from "../data/yearAvailability";
 import { claimModeForYear } from "../lib/estimate";
 import type { ReliefId } from "../lib/types";
 
@@ -10,40 +13,42 @@ export function ClaimGuide() {
   const { state, setStepTick } = useAppState();
   const mode = claimModeForYear(state.taxYear);
 
-  const orderedSelected = RELIEFS.filter((r) =>
-    state.selectedReliefIds.includes(r.id),
+  const orderedSelected = RELIEFS.filter(
+    (r) =>
+      state.selectedReliefIds.includes(r.id) &&
+      reliefAvailableInYear(r.id, state.taxYear),
   ).sort((a, b) => a.claimOrder - b.claimOrder);
 
   const focusId = (reliefId as ReliefId) || orderedSelected[0]?.id;
   const focus = focusId ? RELIEF_BY_ID[focusId] : undefined;
-  const guide = focusId ? CLAIM_STEPS[focusId] : undefined;
+  const guide = focusId ? CLAIM_GUIDES[focusId] : undefined;
   const steps = guide
     ? mode === "inYear"
       ? guide.stepsInYear
       : guide.stepsPrior
     : [];
+  const shots = shotsForRelief(focusId);
 
-  const others = RELIEFS.filter((r) => r.id !== focusId);
+  const others = RELIEFS.filter(
+    (r) => r.id !== focusId && reliefAvailableInYear(r.id, state.taxYear),
+  );
 
   return (
     <PageTransition>
       <section className="panel stack stack-lg">
-        <div>
+        <div className="stack">
           <div className="eyebrow">
             Claim guides · {state.taxYear} ·{" "}
             {mode === "inYear" ? "in-year path" : "prior-year path"}
           </div>
           <h1 style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)" }}>
-            {focus?.title ?? "How to claim"}
+            {guide?.title ?? focus?.title ?? "How to claim"}
           </h1>
-          <p className="lead" style={{ marginTop: "0.5rem" }}>
-            Selected items stay pinned. Screenshots below are illustrative
-            placeholders of the myAccount journey.
-          </p>
+          {guide && <p className="lede">{guide.overview}</p>}
         </div>
 
         {orderedSelected.length > 0 && (
-          <div className="row">
+          <div className="row" style={{ flexWrap: "wrap" }}>
             {orderedSelected.map((r) => (
               <Link
                 key={r.id}
@@ -58,10 +63,17 @@ export function ClaimGuide() {
 
         {guide && (
           <>
-            <div>
-              <h2 style={{ fontSize: "1.2rem", marginBottom: "0.55rem" }}>
-                What you’ll need
-              </h2>
+            <div className="stack">
+              <h2 style={{ fontSize: "1.15rem" }}>Who this is for</h2>
+              <ul className="muted small">
+                {guide.eligibility.map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="stack">
+              <h2 style={{ fontSize: "1.15rem" }}>What you’ll need</h2>
               <ul className="muted small">
                 {guide.need.map((n) => (
                   <li key={n}>{n}</li>
@@ -69,38 +81,84 @@ export function ClaimGuide() {
               </ul>
             </div>
 
-            <ol className="steps">
-              {steps.map((step, i) => {
-                const key = `${focusId}:${i}`;
-                const done = !!state.stepTicks[key];
-                return (
-                  <li key={key}>
-                    <div>
-                      <div>{step}</div>
-                      {i === 0 && (
-                        <div className="shot">
-                          Illustration: myAccount home → PAYE Services card
-                          highlighted. (Replace with real cropped screenshots
-                          before launch.)
+            {guide.tips.length > 0 && (
+              <div className="disclaimer">
+                <strong>Before you start: </strong>
+                {guide.tips.join(" ")}
+              </div>
+            )}
+
+            {shots.length > 0 && (
+              <div className="stack">
+                <h2 style={{ fontSize: "1.15rem" }}>Screens you’ll see</h2>
+                <p className="small muted">
+                  Primary images are from Revenue’s published manuals (sample UI).
+                  Secondary images are redacted real myAccount captures. Official
+                  rules always win —{" "}
+                  <a href="https://www.revenue.ie" target="_blank" rel="noreferrer">
+                    revenue.ie
+                  </a>
+                  .
+                </p>
+                <div className="shot-gallery">
+                  {shots.map((s) => (
+                    <figure key={s.src} className="shot-card">
+                      <div className="shot-badge">
+                        {s.source === "official" ? "Official sample" : "Secondary"}
+                      </div>
+                      <img src={s.src} alt={s.caption} loading="lazy" />
+                      <figcaption>{s.caption}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="stack">
+              <h2 style={{ fontSize: "1.15rem" }}>
+                Steps ({mode === "inYear" ? "current year" : "prior year"})
+              </h2>
+              <p className="small muted">
+                Mark each step when you’ve done it — tap again to undo if you need
+                to revisit.
+              </p>
+              <ol className="steps">
+                {steps.map((step, i) => {
+                  const key = `${focusId}:${i}`;
+                  const done = !!state.stepTicks[key];
+                  return (
+                    <li key={key} className={done ? "step-done" : undefined}>
+                      <div className="stack" style={{ gap: "0.35rem" }}>
+                        <div>
+                          <strong>{step.title}</strong>
+                          <p className="small muted" style={{ marginTop: "0.25rem" }}>
+                            {step.detail}
+                          </p>
                         </div>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      className="btn btn-ghost"
-                      onClick={() => setStepTick(key, !done)}
-                    >
-                      {done ? "Done" : "Mark done"}
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
+                        {step.screenshotHint && (
+                          <div className="shot">
+                            More screenshots welcome: {step.screenshotHint}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className={`btn step-toggle ${done ? "step-toggle-done" : "btn-ghost"}`}
+                        onClick={() => setStepTick(key, !done)}
+                        aria-pressed={done}
+                      >
+                        {done ? "✓ Done — undo" : "Mark done"}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
 
             <p className="small">
               Official reference:{" "}
               <a href="https://www.revenue.ie" target="_blank" rel="noreferrer">
-                revenue.ie
+                {guide.officialPath}
               </a>
             </p>
           </>
@@ -118,7 +176,7 @@ export function ClaimGuide() {
           </div>
         </details>
 
-        <div className="row">
+        <div className="row" style={{ flexWrap: "wrap" }}>
           <Link className="btn btn-secondary" to="/results">
             Back to results
           </Link>

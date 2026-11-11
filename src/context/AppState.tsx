@@ -47,7 +47,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setTaxYear = useCallback(
-    (y: TaxYear) => persist({ ...state, taxYear: y }),
+    (y: TaxYear) =>
+      persist({
+        ...state,
+        taxYear: y,
+        selectedReliefIds: deriveSelectedReliefs(state.answers, y),
+      }),
     [persist, state],
   );
 
@@ -57,7 +62,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       persist({
         ...state,
         answers,
-        selectedReliefIds: deriveSelectedReliefs(answers),
+        selectedReliefIds: deriveSelectedReliefs(answers, state.taxYear),
         checklistComplete: false,
       });
     },
@@ -84,7 +89,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     persist({
       ...state,
       checklistComplete: true,
-      selectedReliefIds: deriveSelectedReliefs(state.answers),
+      selectedReliefIds: deriveSelectedReliefs(state.answers, state.taxYear),
     });
   }, [persist, state]);
 

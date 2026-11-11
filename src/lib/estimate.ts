@@ -1,5 +1,12 @@
 import { TY2026 } from "../data/taxYear2026";
-import type { ChecklistAnswers, EstimateAmounts, PersonalStatus, ReliefId } from "./types";
+import { reliefAvailableInYear } from "../data/yearAvailability";
+import type {
+  ChecklistAnswers,
+  EstimateAmounts,
+  PersonalStatus,
+  ReliefId,
+  TaxYear,
+} from "./types";
 
 export type ReliefLine = {
   id: ReliefId;
@@ -46,20 +53,23 @@ export function runEstimate(
   selected: ReliefId[],
   answers: ChecklistAnswers,
   amounts: EstimateAmounts,
+  taxYear: TaxYear = 2026,
 ): EstimateResult {
   const status = answers.q_status;
   const band = statusBand(status);
   const gross = amounts.grossPay ?? 0;
   const rate = marginalRate(gross || band + 1, band);
+  const active = selected.filter((id) => reliefAvailableInYear(id, taxYear));
   const lines: ReliefLine[] = [];
   const assumptions: string[] = [
-    `Using TY ${TY2026.label} rates and credits.`,
+    `Using TY ${TY2026.label} rates and credits (selected year TY ${taxYear}).`,
     `Assumed standard rate band ≈ €${band.toLocaleString("en-IE")} for your status (simplified).`,
     `Marginal rate used for rate-sensitive reliefs: ${(rate * 100).toFixed(0)}%.`,
     "Does not model BIK, pension relief, emergency tax, or full jointly-assessed splits.",
+    "Remote working relief (current statutory formula) applies from tax year 2022.",
   ];
 
-  if (selected.includes("rent_tax_credit") && (amounts.rentPaidYear ?? 0) > 0) {
+  if (active.includes("rent_tax_credit") && (amounts.rentPaidYear ?? 0) > 0) {
     const max =
       status === "married_joint" ? TY2026.rentCreditMaxJoint : TY2026.rentCreditMaxSingle;
     const credit = Math.min((amounts.rentPaidYear ?? 0) * TY2026.rentCreditRate, max);
@@ -71,7 +81,7 @@ export function runEstimate(
     });
   }
 
-  if (selected.includes("health_expenses") && (amounts.healthNetPaid ?? 0) > 0) {
+  if (active.includes("health_expenses") && (amounts.healthNetPaid ?? 0) > 0) {
     lines.push({
       id: "health_expenses",
       label: "Health expenses relief (20%)",
@@ -79,7 +89,7 @@ export function runEstimate(
     });
   }
 
-  if (selected.includes("nursing_home") && (amounts.nursingHomeNetPaid ?? 0) > 0) {
+  if (active.includes("nursing_home") && (amounts.nursingHomeNetPaid ?? 0) > 0) {
     lines.push({
       id: "nursing_home",
       label: "Nursing home relief",
@@ -88,7 +98,7 @@ export function runEstimate(
     });
   }
 
-  if (selected.includes("remote_working") && (amounts.utilityBillsYear ?? 0) > 0) {
+  if (active.includes("remote_working") && (amounts.utilityBillsYear ?? 0) > 0) {
     const A = amounts.utilityBillsYear ?? 0;
     const B = amounts.remoteDays ?? 0;
     const C = TY2026.daysInYear;
@@ -102,7 +112,7 @@ export function runEstimate(
     });
   }
 
-  if (selected.includes("flat_rate_expense") && (amounts.freAmount ?? 0) > 0) {
+  if (active.includes("flat_rate_expense") && (amounts.freAmount ?? 0) > 0) {
     lines.push({
       id: "flat_rate_expense",
       label: "Flat-rate expense (indicative)",
@@ -111,7 +121,7 @@ export function runEstimate(
     });
   }
 
-  if (selected.includes("mortgage_interest_credit") && (amounts.mortgageInterestPaid ?? 0) > 0) {
+  if (active.includes("mortgage_interest_credit") && (amounts.mortgageInterestPaid ?? 0) > 0) {
     const credit = Math.min(
       amounts.mortgageInterestPaid ?? 0,
       TY2026.mortgageInterestCreditMax,
@@ -124,7 +134,7 @@ export function runEstimate(
     });
   }
 
-  if (selected.includes("home_carer_credit")) {
+  if (active.includes("home_carer_credit")) {
     const income = amounts.homeCarerIncome ?? 0;
     let credit: number = TY2026.homeCarerCreditMax;
     if (income > 7200) {
@@ -139,13 +149,13 @@ export function runEstimate(
     });
   }
 
-  if (selected.includes("age_credit")) {
+  if (active.includes("age_credit")) {
     const credit =
       status === "married_joint" ? TY2026.ageCreditMarried : TY2026.ageCreditSingle;
     lines.push({ id: "age_credit", label: "Age tax credit", amount: euro(credit) });
   }
 
-  if (selected.includes("incapacitated_child_credit")) {
+  if (active.includes("incapacitated_child_credit")) {
     const n = Math.max(1, amounts.incapChildCount ?? 1);
     lines.push({
       id: "incapacitated_child_credit",
@@ -154,7 +164,7 @@ export function runEstimate(
     });
   }
 
-  if (selected.includes("dependent_relative_credit")) {
+  if (active.includes("dependent_relative_credit")) {
     const n = Math.max(1, amounts.depRelativeCount ?? 1);
     lines.push({
       id: "dependent_relative_credit",
@@ -170,7 +180,7 @@ export function runEstimate(
   let indicativeRefund: number | null = null;
 
   if (gross > 0) {
-    const freDeduction = selected.includes("flat_rate_expense") ? amounts.freAmount ?? 0 : 0;
+    const freDeduction = active.includes("flat_rate_expense") ? amounts.freAmount ?? 0 : 0;
     const taxable = Math.max(0, gross - freDeduction);
     const at20 = Math.min(taxable, band) * TY2026.standardRate;
     const at40 = Math.max(0, taxable - band) * TY2026.higherRate;

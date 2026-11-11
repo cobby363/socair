@@ -507,6 +507,31 @@ p {
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 0.85rem 1rem;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.steps li.step-done {
+  border-color: color-mix(in srgb, var(--moss) 45%, var(--line));
+  background: color-mix(in srgb, var(--glow) 42%, #fff);
+}
+
+.step-toggle {
+  width: auto !important;
+  white-space: nowrap;
+  align-self: center;
+}
+
+.step-toggle-done {
+  background: var(--moss-deep);
+  color: #f4faf6;
+  border-color: var(--moss-deep);
+  font-weight: 700;
+}
+
+.step-toggle-done:hover {
+  background: var(--moss);
+  border-color: var(--moss);
+  color: #f4faf6;
 }
 
 .steps li::before {
@@ -532,6 +557,45 @@ p {
     #f7faf8;
   color: var(--ink-soft);
   font-size: 0.88rem;
+}
+
+.shot-gallery {
+  display: grid;
+  gap: 1rem;
+}
+
+.shot-card {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.shot-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--paper-2);
+}
+
+.shot-card figcaption {
+  padding: 0.75rem 1rem 1rem;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.shot-badge {
+  display: inline-block;
+  margin: 0.75rem 1rem 0;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--glow) 55%, white);
+  color: var(--moss-deep);
 }
 
 details.other-guides {

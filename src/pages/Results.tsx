@@ -3,15 +3,19 @@ import { PageTransition } from "../components/PageTransition";
 import { Disclaimer } from "../components/Disclaimer";
 import { useAppState } from "../context/AppState";
 import { RELIEFS } from "../data/reliefs";
+import { reliefAvailableInYear } from "../data/yearAvailability";
 
 export function Results() {
   const { state, toggleRelief } = useAppState();
   const navigate = useNavigate();
 
-  const selected = RELIEFS.filter((r) => state.selectedReliefIds.includes(r.id)).sort(
-    (a, b) => a.claimOrder - b.claimOrder,
+  const yearReliefs = RELIEFS.filter((r) =>
+    reliefAvailableInYear(r.id, state.taxYear),
   );
-  const other = RELIEFS.filter((r) => !state.selectedReliefIds.includes(r.id));
+  const selected = yearReliefs
+    .filter((r) => state.selectedReliefIds.includes(r.id))
+    .sort((a, b) => a.claimOrder - b.claimOrder);
+  const other = yearReliefs.filter((r) => !state.selectedReliefIds.includes(r.id));
 
   return (
     <PageTransition>

@@ -15,7 +15,12 @@ type MetricKey = keyof typeof RESULT_METRIC_HELP;
 
 export function EstimateResults() {
   const { state, amounts } = useAppState();
-  const result = runEstimate(state.selectedReliefIds, state.answers, amounts);
+  const result = runEstimate(
+    state.selectedReliefIds,
+    state.answers,
+    amounts,
+    state.taxYear,
+  );
   const [openMetric, setOpenMetric] = useState<MetricKey | null>(null);
 
   const calculatedIds = new Set(result.lines.map((l) => l.id));
